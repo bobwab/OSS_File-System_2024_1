@@ -267,3 +267,80 @@ while not b_is_exit:
 
     else:
         print("알 수 없는 입력입니다. 다시 시도해주세요.")
+
+import os
+import shutil
+import hashlib
+import time
+
+# 파일 관리 시스템
+# - 중복 파일 탐지 및 제거: 지정된 디렉토리 내 중복 파일을 식별하고 제거합니다.
+# - 파일명 변경: 사용자가 지정한 파일의 이름을 새로운 이름으로 변경합니다.
+# - 파일 메타데이터 관리: 파일의 생성 시간, 수정 시간, 크기 등의 메타데이터를 조회합니다.
+
+def manage_metadata(file_path):
+    """
+    파일의 메타데이터를 조회하고 출력하는 함수입니다.
+    
+    Parameters:
+        file_path (str): 메타데이터를 조회할 파일의 경로
+    
+    Returns:
+        None
+    """
+    # 파일 생성 및 수정 시간 조회
+    created_time = os.path.getctime(file_path)
+    modified_time = os.path.getmtime(file_path)
+
+    # 시간을 가독성 있는 형식으로 변환
+    created_time_readable = time.ctime(created_time)
+    modified_time_readable = time.ctime(modified_time)
+
+    # 파일 크기 조회
+    file_size = os.path.getsize(file_path)
+
+    # 메타데이터 출력
+    print(f"File: {file_path}")
+    print(f"Created Time: {created_time_readable}")
+    print(f"Modified Time: {modified_time_readable}")
+    print(f"Size: {file_size} bytes")
+
+def find_duplicates(directory):
+    """
+    지정된 디렉토리에서 중복 파일을 찾아내고, 중복된 파일의 경로를 반환하는 함수입니다.
+    
+    Parameters:
+        directory (str): 중복 파일을 찾을 디렉토리의 경로
+    
+    Returns:
+        dict: 중복 파일의 해시값을 키로 하고, 해당 파일 경로의 리스트를 값으로 하는 사전 객체
+    """
+    duplicates = {}
+    for dirpath, _, filenames in os.walk(directory):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            with open(filepath, 'rb') as f:
+                file_hash = hashlib.md5(f.read()).hexdigest()
+            if file_hash in duplicates:
+                duplicates[file_hash].append(filepath)
+            else:
+                duplicates[file_hash] = [filepath]
+    return {hash: paths for hash, paths in duplicates.items() if len(paths) > 1}
+
+def remove_duplicates(duplicates):
+    """
+    중복된 파일을 제거하는 함수입니다.
+    
+    Parameters:
+        duplicates (dict): 중복 파일의 해시값을 키로 하고, 해당 파일 경로의 리스트를 값으로 하는 사전 객체
+    
+    Returns:
+        None
+    """
+    for _, duplicate_paths in duplicates.items():
+        for path in duplicate_paths[1:]:
+            os.remove(path)
+            print(f"Deleted: {path}")
+
+# 기타 함수들도 동일한 방식으로 주석을 수정할 수 있습니다.
+
